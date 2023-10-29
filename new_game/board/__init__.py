@@ -1,1 +1,1 @@
-from .chess_board import *
+from .chessboard import *
