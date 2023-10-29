@@ -29,3 +29,8 @@ class ChessBoard:
 
     def show_square(self):
         return '\n'.join(' '.join(c.square for c in h) for h in self.board)
+
+    def select(self, hor, ver):
+        selected_cell = self.board[hor][ver]
+        if isinstance(selected_cell, Figure):
+            return selected_cell.moves_current_board(self.board)
