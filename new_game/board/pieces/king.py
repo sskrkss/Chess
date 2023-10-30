@@ -1,7 +1,6 @@
-from .empty_cell import EmptyCell
-from .figure import Figure
+from .cell_and_piece import *
 
-class King(Figure):
+class King(Piece):
     def __str__(self):
         return 'K'
 

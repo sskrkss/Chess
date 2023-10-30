@@ -1,7 +1,6 @@
-from .empty_cell import EmptyCell
-from .figure import Figure
+from .cell_and_piece import *
 
-class Pawn(Figure):
+class Pawn(Piece):
     def __str__(self):
         return 'P'
 

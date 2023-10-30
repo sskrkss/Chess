@@ -1,4 +1,3 @@
-from .empty_cell import *
 from .pawn import *
 from .rook import *
 from .knight import *

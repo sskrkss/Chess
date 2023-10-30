@@ -1,7 +1,6 @@
-from .empty_cell import EmptyCell
-from .figure import Figure
+from .cell_and_piece import *
 
-class Rook(Figure):
+class Rook(Piece):
     def __str__(self):
         return 'R'
 
