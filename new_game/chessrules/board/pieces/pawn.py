@@ -1,4 +1,5 @@
-from .cell_and_piece import *
+from .piece import *
+
 
 class Pawn(Piece):
     def __str__(self):
@@ -53,7 +54,7 @@ class Pawn(Piece):
         #  диагональные взятия
         for hor, ver in updown_direction:
             target = current_board[hor][ver]
-            if isinstance(target, Figure) and self.color != target.color:
+            if isinstance(target, Piece) and self.color != target.color:
                 output_moves.append((hor, ver))
 
         return output_moves

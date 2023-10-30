@@ -1,4 +1,5 @@
-from .cell_and_piece import *
+from .piece import *
+
 
 class Knight(Piece):
     def __str__(self):
@@ -18,6 +19,6 @@ class Knight(Piece):
         output_moves = []
         for hor, ver in input_moves:
             target = current_board[hor][ver]
-            if type(target) == EmptyCell or (isinstance(target, Figure) and self.color != target.color):
+            if type(target) == EmptyCell or (isinstance(target, Piece) and self.color != target.color):
                 output_moves.append((hor, ver))
         return output_moves

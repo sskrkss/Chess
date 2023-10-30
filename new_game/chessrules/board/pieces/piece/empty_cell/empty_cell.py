@@ -6,6 +6,7 @@ class EmptyCell:
         self.hor = hor
         self.coord = f'{self._dict_ver[ver]}{8-hor}'
         self.square = 'wb'[(ver + hor) % 2]
+
     def __str__(self):
         return '*'
 

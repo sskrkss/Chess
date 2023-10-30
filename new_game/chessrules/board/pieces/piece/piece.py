@@ -1,4 +1,5 @@
-from .empty_cell import EmptyCell
+from .empty_cell import *
+
 
 class Piece(EmptyCell):
     def __init__(self, hor, ver, color):

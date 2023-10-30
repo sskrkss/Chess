@@ -1,6 +1,7 @@
-from .board import *
+from .chessrules import *
 
-class NewGame(ChessBoard):
+
+class NewGame(ChessRules):
     def new_game(self):
         while True:
             while True:
@@ -17,5 +18,5 @@ class NewGame(ChessBoard):
                 print('Ход черных')
                 print()
                 h1, v1, h2, v2 = [int(input()) for _ in range(4)]
-                if not self.move(h1, v1, h2, v2, 'w'):
+                if not self.move(h1, v1, h2, v2, 'b'):
                     break

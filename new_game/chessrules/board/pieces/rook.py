@@ -1,4 +1,5 @@
-from .cell_and_piece import *
+from .piece import *
+
 
 class Rook(Piece):
     def __str__(self):

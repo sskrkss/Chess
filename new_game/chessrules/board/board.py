@@ -1,6 +1,7 @@
-from new_game.pieces import *
+from .pieces import *
 
-class ChessBoard:
+
+class Board:
     def __init__(self):
         row1 = [
             Rook(0, 0, 'b'), Knight(0, 1, 'b'), Bishop(0, 2, 'b'), Queen(0, 4, 'b'),
@@ -29,16 +30,3 @@ class ChessBoard:
 
     def show_square(self):
         return '\n'.join(' '.join(c.square for c in h) for h in self.board)
-
-    def move(self, h1, v1, h2, v2, turn):
-        selected_cell = self.board[h1][v1]
-        if isinstance(selected_cell, Figure) and selected_cell.color == turn:
-            if (h2, v2) in selected_cell.moves_current_board(self.board):
-                self.board[h2][v2] = self.board[h1][v1]
-                self.board[h1][v1] = EmptyCell(h1, v1)
-            else:
-                print('Такого хода нет. Попробуйте еще раз')
-                return True
-        else:
-            print('Вы выбрали пустую клетку или чужую фигуру. Попробуйте еще раз')
-            return True

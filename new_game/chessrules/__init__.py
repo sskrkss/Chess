@@ -1,0 +1,1 @@
+from chessrules import *
