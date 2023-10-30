@@ -3,8 +3,8 @@ from .pieces import *
 class ChessBoard:
     def __init__(self):
         row1 = [
-            Rook(0, 0, 'b'), Knight(0, 1, 'b'), Bishop(0, 2, 'b'), King(0, 3, 'b'),
-            Queen(0, 4, 'b'), Bishop(0, 5, 'b'), Knight(0, 6, 'b'), Rook(0, 7, 'b')
+            Rook(0, 0, 'b'), Knight(0, 1, 'b'), Bishop(0, 2, 'b'), Queen(0, 4, 'b'),
+            King(0, 3, 'b'), Bishop(0, 5, 'b'), Knight(0, 6, 'b'), Rook(0, 7, 'b')
         ]
         row2 = [Pawn(1, v, 'b') for v in range(8)]
         row3 = [EmptyCell(2, v) for v in range(8)]
@@ -30,7 +30,15 @@ class ChessBoard:
     def show_square(self):
         return '\n'.join(' '.join(c.square for c in h) for h in self.board)
 
-    def select(self, hor, ver):
-        selected_cell = self.board[hor][ver]
-        if isinstance(selected_cell, Figure):
-            return selected_cell.moves_current_board(self.board)
+    def move(self, h1, v1, h2, v2, turn):
+        selected_cell = self.board[h1][v1]
+        if isinstance(selected_cell, Figure) and selected_cell.color == turn:
+            if (h2, v2) in selected_cell.moves_current_board(self.board):
+                self.board[h2][v2] = self.board[h1][v1]
+                self.board[h1][v1] = EmptyCell(h1, v1)
+            else:
+                print('Такого хода нет. Попробуйте еще раз')
+                return True
+        else:
+            print('Вы выбрали пустую клетку или чужую фигуру. Попробуйте еще раз')
+            return True
