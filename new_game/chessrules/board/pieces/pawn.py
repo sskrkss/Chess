@@ -52,9 +52,15 @@ class Pawn(Piece):
                 break
 
         #  диагональные взятия
-        for hor, ver in updown_direction:
+        for hor, ver in diag_direction:
             target = current_board[hor][ver]
             if isinstance(target, Piece) and self.color != target.color:
+                output_moves.append((hor, ver))
+
+        #  взятие на проходе
+        for hor, ver in diag_direction:
+            target = current_board[hor-1][ver]
+            if isinstance(target, Pawn) and self.color != target.color and abs(target.previous_move[0] - hor + 1) == 2:
                 output_moves.append((hor, ver))
 
         return output_moves

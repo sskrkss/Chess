@@ -1,5 +1,9 @@
-import new_game
+from new_game import new_game
 
-if __name__ == '__main__':
-    new_game = new_game.NewGame()
-    new_game.new_game()
+
+def main():
+    game = new_game.NewGame()
+    print(game)
+
+if __name__ == "__main__":
+    main()

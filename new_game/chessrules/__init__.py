@@ -1,1 +1,1 @@
-from chessrules import *
+from .chessrules import *
