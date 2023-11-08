@@ -6,9 +6,10 @@ class ChessRules(Board):
         selected_cell = self.board[h1][v1]
         if isinstance(selected_cell, Piece) and selected_cell.color == turn:
             if (h2, v2) in selected_cell.moves_current_board(self.board):
-                self.board[h1][v1].previous_move = h2, v2
+                self.board[h1][v1].previous_coord = h1, v1  # записываем предыдущие координаты фигуры
                 self.board[h2][v2] = self.board[h1][v1]
                 self.board[h1][v1] = EmptyCell(h1, v1)
+                self.last_move = self.board[h2][v2]  # записываем фигуру, ходившую последней
             else:
                 print('Такого хода нет. Попробуйте еще раз')
                 return True

@@ -59,8 +59,9 @@ class Pawn(Piece):
 
         #  взятие на проходе
         for hor, ver in diag_direction:
-            target = current_board[hor-1][ver]
-            if isinstance(target, Pawn) and self.color != target.color and abs(target.previous_move[0] - hor + 1) == 2:
+            target = current_board[self.hor][ver]
+            if (isinstance(target, Pawn) and self.color != target.color and
+                    abs(self.hor - target.previous_coord[0]) == 2) and target == current_board.last_move:
                 output_moves.append((hor, ver))
 
         return output_moves

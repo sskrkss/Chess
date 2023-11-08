@@ -18,6 +18,7 @@ class Board:
             Queen(7, 4, 'w'), Bishop(7, 5, 'w'), Knight(7, 6, 'w'), Rook(7, 7, 'w')
         ]
         self.board = [row1, row2, row3, row4, row5, row6, row7, row8]
+        self.last_move = None
 
     def __str__(self):
         return '\n'.join(' '.join(str(c) for c in h) for h in self.board)
