@@ -3,7 +3,7 @@ from .piece import *
 
 class Knight(Piece):
     def __str__(self):
-        return 'N'
+        return f'N({self.color})'
 
     def __repr__(self):
         return f'Knight({self.hor}, {self.ver})'

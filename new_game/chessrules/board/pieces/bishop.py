@@ -3,7 +3,7 @@ from .piece import *
 
 class Bishop(Piece):
     def __str__(self):
-        return 'B'
+        return f'B({self.color})'
 
     def __repr__(self):
         return f'Bishop({self.hor}, {self.ver})'

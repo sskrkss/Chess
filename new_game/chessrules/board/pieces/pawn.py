@@ -3,7 +3,7 @@ from .piece import *
 
 class Pawn(Piece):
     def __str__(self):
-        return 'P'
+        return f'P({self.color})'
 
     def __repr__(self):
         return f'Pawn({self.hor}, {self.ver})'

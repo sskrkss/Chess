@@ -3,7 +3,7 @@ from .piece import *
 
 class Rook(Piece):
     def __str__(self):
-        return 'R'
+        return f'R({self.color})'
 
     def __repr__(self):
         return f'Rook({self.hor}, {self.ver})'
