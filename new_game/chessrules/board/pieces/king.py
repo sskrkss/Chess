@@ -24,14 +24,13 @@ class King(Piece):
         return output_moves
 
     def long_castling(self, current_board):
-        output_moves = []
         #  в длинную сторону
-        if (self.previous_move == None and current_board[self.hor][0].previous_move == None and
+        if (self.previous_coord == None and current_board[self.hor][0].previous_coord == None and
                 all([type(current_board[self.hor][x]) == EmptyCell for x in range(1, 4)])):
-            output_moves.append((self.hor, 2))
+            return self.hor, 2
 
     def short_castling(self, current_board):
         #  в короткую сторону
-        if (self.previous_move == None and current_board[self.hor][7].previous_move == None and
+        if (self.previous_coord == None and current_board[self.hor][7].previous_coord == None and
                 all([type(current_board[self.hor][x]) == EmptyCell for x in range(5, 6)])):
             return self.hor, 6

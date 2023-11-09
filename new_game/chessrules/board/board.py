@@ -19,6 +19,7 @@ class Board:
         ]
         self.board = [row1, row2, row3, row4, row5, row6, row7, row8]
         self.last_move = None
+        self.fifty_moves_counter = None
 
     def __str__(self):
         return '\n'.join(' '.join(str(c).center(4) for c in h) for h in self.board)
