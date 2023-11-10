@@ -1,19 +1,17 @@
-from .board import *
+from .staticboard import *
 
 
-class ChessRules(Board):
+class DynamicBoard(StaticBoard):
     def move(self, h1, v1, h2, v2, turn):
         selected_cell = self.board[h1][v1]
         if isinstance(selected_cell, Piece) and selected_cell.color == turn:
-
             #  обычный ход
             if (h2, v2) in selected_cell.moves_current_board(self.board):
-                self.board[h1][v1].previous_coord = h1, v1  # записываем предыдущие координаты фигуры
                 self.board[h2][v2] = self.board[h1][v1]  # передвигаем фигуру
-                self.board[h2][v2].after_move(h2, v2)  # записываем новые координаты фигуры
                 self.board[h1][v1] = EmptyCell(h1, v1)  # освобождаем предыдущую клетку
+                self.board[h2][v2].previous_coord = h1, v1  # записываем предыдущие координаты фигуры
+                self.board[h2][v2].after_move(h2, v2)  # записываем новые координаты фигуры
                 self.last_move = self.board[h2][v2]  # записываем фигуру, ходившую последней
-
             #  рокировка в короткую сторону
             elif isinstance(selected_cell, King) and (h2, v2) == selected_cell.short_castling(self.board):
                 h = h2
@@ -26,7 +24,6 @@ class ChessRules(Board):
                 self.board[h][4] = EmptyCell(h, 4)  # освобождаем предыдущую клетку
                 self.board[h][7] = EmptyCell(h, 7)  # освобождаем предыдущую клетку
                 self.last_move = self.board[h][6]  # записываем фигуру, ходившую последней
-
             #  рокировка в длинную сторону
             elif isinstance(selected_cell, King) and (h2, v2) == selected_cell.long_castling(self.board):
                 h = h2
@@ -40,17 +37,14 @@ class ChessRules(Board):
                 self.board[h][1] = EmptyCell(h, 1)  # освобождаем предыдущую клетку
                 self.board[h][4] = EmptyCell(h, 4)  # освобождаем предыдущую клетку
                 self.last_move = self.board[h][2]  # записываем фигуру, ходившую последней
-
             else:
                 print('Такого хода нет. Попробуйте еще раз')
                 return True
         else:
             print('Вы выбрали пустую клетку или чужую фигуру. Попробуйте еще раз')
             return True
-
     def fifty_moves_rule(self):
         if isinstance(self.last_move, Pawn):
             self.fifty_moves_counter = 0
         else:
             self.fifty_moves_counter += 1
-        return self.fifty_moves_counter > 50
