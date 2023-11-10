@@ -2,6 +2,11 @@ from .staticboard import *
 
 
 class DynamicBoard(StaticBoard):
+    def __init__(self):
+        super().__init__()
+        self.fifty_moves_counter = 0
+        self.last_move = None
+
     def move(self, h1, v1, h2, v2, turn):
         selected_cell = self.board[h1][v1]
         if isinstance(selected_cell, Piece) and selected_cell.color == turn:
@@ -43,6 +48,7 @@ class DynamicBoard(StaticBoard):
         else:
             print('Вы выбрали пустую клетку или чужую фигуру. Попробуйте еще раз')
             return True
+
     def fifty_moves_rule(self):
         if isinstance(self.last_move, Pawn):
             self.fifty_moves_counter = 0

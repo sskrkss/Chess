@@ -2,6 +2,7 @@ from game import Game
 
 
 def main():
+    print(f'Игра началась', end='\n\n')
     game = Game()
     while game.status in ('Ход белых', 'Ход черных'):
         game.cycle()

@@ -33,15 +33,17 @@ class Game(DynamicBoard):
                 self.status = self._interface[f'ds']
                 return
 
-            # 2.3 сценарий недостатка фигур для мата
+            # 2.3 сценарий реализации правила 50 ходов
+            if self.fifty_moves_counter > 50:
+                self.status = self._interface[f'df']
+                return
+
+            # 2.4 сценарий недостатка фигур для мата
             if self.status:
                 self.status = self._interface[f'dp']
                 return
 
-            # 2.4 сценарий реализации правила 50 ходов
-            if self.fifty_moves_counter > 50:
-                self.status = self._interface[f'df']
-                return
+
 
             # 3 если выход из event loop не происходит, делаем ход
             print(self.status)

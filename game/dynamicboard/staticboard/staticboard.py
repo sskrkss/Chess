@@ -20,10 +20,9 @@ class StaticBoard:
 
     def __init__(self):
         self.board = self._start_board
-        self.fifty_moves_counter = 0
-        self.last_move = None
-        self.b_king_coord = 0, 4
         self.w_king_coord = 7, 4
+        self.b_king_coord = 0, 4
+        self.king_coord = {'w': self.w_king_coord, 'b': self.b_king_coord}
 
     def __str__(self):
         return '\n'.join(' '.join(str(c).center(4) for c in h) for h in self.board)
@@ -37,10 +36,44 @@ class StaticBoard:
     def show_square(self):
         return '\n'.join(' '.join(c.square for c in h) for h in self.board)
 
-    def find_king(self, turn):
-        if turn == 'w':
-            h, v = self.w_king_coord
+    def find_king(self, color):
+            h, v = self.king_coord[color]
             return self.board[h][v]
-        elif turn == 'b':
-            h, v = self.b_king_coord
-            return self.board[h][v]
+
+    def possible_moves(self, hor, ver, color):
+        selected_square = self.board[hor][ver]
+        if isinstance(selected_square, Piece):
+            if selected_square.color == color:
+                input_moves = selected_square.moves_empty_board()
+                output_moves = []
+                # завтра продолжим
+                for h, v in input_moves:
+                    target = self.board[h][v]
+                    if target is EmptyCell or (isinstance(target, Piece) and color != target.color):
+                        output_moves.append((hor, ver))
+                return output_moves
+            else:
+                print('Вы выбрали чужую фигуру. Попробуйте еще раз')
+        else:
+            print('Вы выбрали пустую клетку. Попробуйте еще раз')
+
+    def is_check(self, color):
+        h, v = self.king_coord[color]
+        input_moves = Queen(h, v, color).moves_empty_board()
+        for direction in input_moves:
+            for hor, ver in direction:
+                target = self.board[hor][ver]
+                if isinstance(target, Piece) and color == target.color:
+                    break
+                elif isinstance(target, Piece) and color != target.color:
+                    return True
+
+    def is_checkmate(self, color):
+        if self.is_check(color) and not self.moves_current_board() and not self.is_defence():
+            return True
+
+    def is_stalemate(self, current_board):
+        if (not self.is_check(current_board) and not self.moves_current_board(current_board) and
+                not self.any_moves(current_board)):
+            return True
+
