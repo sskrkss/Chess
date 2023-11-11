@@ -105,22 +105,17 @@ class StaticBoard:
                     return True
 
     def is_checkmate(self, color):
-        if self.is_check(color) and not self.moves_current_board() and not self.is_defence():
-            return True
+        pass
 
-    def is_stalemate(self, current_board):
-        if (not self.is_check(current_board) and not self.moves_current_board(current_board) and
-                not self.any_moves(current_board)):
-            return True
+    def is_stalemate(self, color):
+        pass
 
     def is_long_castling(self):
-        #  в длинную сторону
         if (self.previous_coord == None and current_board[self.hor][0].previous_coord == None and
                 all([type(current_board[self.hor][x]) == EmptyCell for x in range(1, 4)])):
             return self.hor, 2
 
     def is_short_castling(self):
-        #  в короткую сторону
         if (self.previous_coord == None and current_board[self.hor][7].previous_coord == None and
                 all([type(current_board[self.hor][x]) == EmptyCell for x in range(5, 6)])):
             return self.hor, 6
