@@ -43,16 +43,18 @@ class Game(DynamicBoard):
                 self.status = self._interface[f'dp']
                 return
 
-
+            # 2.5 троекратного повторения ходов
 
             # 3 если выход из event loop не происходит, делаем ход
             print(self.status)
             while True:
                 print('Введите координаты выбранной фигуры')
                 h1, v1 = self.coord_converter(input().lower())
+                if not self.is_piece(h1, v1) or not self.is_turn(h1, v1, self.turn):
+                    continue
                 print('Введите координаты хода')
                 h2, v2 = self.coord_converter(input().lower())
-                if not self.move(h1, v1, h2, v2, self.turn):
+                if self.move(h1, v1, h2, v2, self.turn):
                     break
 
             # 4 меняем ход

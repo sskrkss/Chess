@@ -21,17 +21,3 @@ class Queen(Piece):
             left_direction, right_direction, up_direction, down_direction,
             up_right_direction, up_left_direction, down_left_direction, down_right_direction
         ]
-
-    def moves_current_board(self, current_board):
-        input_moves = self.moves_empty_board()
-        output_moves = []
-        for direction in input_moves:
-            for hor, ver in direction:
-                target = current_board[hor][ver]
-                if type(target) == EmptyCell:
-                    output_moves.append((hor, ver))
-                else:
-                    if self.color != target.color:
-                        output_moves.append((hor, ver))
-                    break
-        return output_moves

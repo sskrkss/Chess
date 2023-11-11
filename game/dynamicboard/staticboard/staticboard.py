@@ -20,6 +20,8 @@ class StaticBoard:
 
     def __init__(self):
         self.board = self._start_board
+        self.last_move = None
+        self.fifty_moves_counter = 0
         self.w_king_coord = 7, 4
         self.b_king_coord = 0, 4
         self.king_coord = {'w': self.w_king_coord, 'b': self.b_king_coord}
@@ -40,22 +42,56 @@ class StaticBoard:
             h, v = self.king_coord[color]
             return self.board[h][v]
 
-    def possible_moves(self, hor, ver, color):
-        selected_square = self.board[hor][ver]
-        if isinstance(selected_square, Piece):
-            if selected_square.color == color:
-                input_moves = selected_square.moves_empty_board()
-                output_moves = []
-                # завтра продолжим
-                for h, v in input_moves:
-                    target = self.board[h][v]
-                    if target is EmptyCell or (isinstance(target, Piece) and color != target.color):
-                        output_moves.append((hor, ver))
-                return output_moves
-            else:
-                print('Вы выбрали чужую фигуру. Попробуйте еще раз')
+    def is_piece(self, hor, ver):
+        if self.board[hor][ver] is not EmptyCell:
+            return True
         else:
             print('Вы выбрали пустую клетку. Попробуйте еще раз')
+
+    def is_turn(self, hor, ver, turn):
+        if self.board[hor][ver].color == turn:
+            return True
+        else:
+            print('Вы выбрали чужую фигуру. Попробуйте еще раз')
+
+    def possible_moves(self, hor, ver, color):
+        selected_square = self.board[hor][ver]
+        input_moves = selected_square.moves_empty_board()
+        output_moves = []
+        # bishop, queen, rook, knight, king
+        if isinstance(selected_square, (Bishop, Queen, Rook, Knight, King)):
+            for direction in input_moves:
+                for h, v in direction:
+                    target = self.board[h][v]
+                    if target is EmptyCell:
+                        output_moves.append((h, v))
+                    else:
+                        if color != target.color:
+                            output_moves.append((h, v))
+                        break
+        # pawn
+        elif selected_square is Pawn:
+            updown_direction, diag_direction = input_moves
+            # вертикальные ходы
+            for h, v in updown_direction:
+                target = self.board[h][v]
+                if target is EmptyCell:
+                    output_moves.append((h, v))
+                else:
+                    break
+            # диагональные взятия
+            for h, v in diag_direction:
+                target = self.board[h][v]
+                if isinstance(target, Piece) and color != target.color:
+                    output_moves.append((h, v))
+            # взятие на проходе
+            for h, v in diag_direction:
+                target = self.board[selected_square.hor][v]
+                if (target is Pawn and color != target.color and
+                        abs(selected_square.hor - target.previous_coord[0]) == 2 and
+                        target == self.last_move):
+                    output_moves.append((h, v))
+        return output_moves
 
     def is_check(self, color):
         h, v = self.king_coord[color]
@@ -77,3 +113,20 @@ class StaticBoard:
                 not self.any_moves(current_board)):
             return True
 
+    def is_long_castling(self):
+        #  в длинную сторону
+        if (self.previous_coord == None and current_board[self.hor][0].previous_coord == None and
+                all([type(current_board[self.hor][x]) == EmptyCell for x in range(1, 4)])):
+            return self.hor, 2
+
+    def is_short_castling(self):
+        #  в короткую сторону
+        if (self.previous_coord == None and current_board[self.hor][7].previous_coord == None and
+                all([type(current_board[self.hor][x]) == EmptyCell for x in range(5, 6)])):
+            return self.hor, 6
+
+    def fifty_moves_rule(self):
+        if isinstance(self.last_move, Pawn):
+            self.fifty_moves_counter = 0
+        else:
+            self.fifty_moves_counter += 1
