@@ -20,6 +20,7 @@ class StaticBoard:
 
     def __init__(self):
         self.board = self._start_board
+        self.turn = 'w'
         self.last_move = None
         self.fifty_moves_counter = 0
         self.w_king_coord = 7, 4
@@ -38,23 +39,30 @@ class StaticBoard:
     def show_square(self):
         return '\n'.join(' '.join(c.square for c in h) for h in self.board)
 
-    def find_king(self, color):
-            h, v = self.king_coord[color]
-            return self.board[h][v]
-
     def is_piece(self, hor, ver):
         if self.board[hor][ver] is not EmptyCell:
             return True
         else:
             print('Вы выбрали пустую клетку. Попробуйте еще раз')
 
-    def is_turn(self, hor, ver, turn):
-        if self.board[hor][ver].color == turn:
+    def is_turn(self, hor, ver):
+        if self.board[hor][ver].color == self.turn:
             return True
         else:
             print('Вы выбрали чужую фигуру. Попробуйте еще раз')
 
-    def possible_moves(self, hor, ver, color):
+    def is_long_castling(self):
+        if (self.previous_coord == None and current_board[self.hor][0].previous_coord == None and
+                all([type(current_board[self.hor][x]) == EmptyCell for x in range(1, 4)])):
+            return self.hor, 2
+
+    def is_short_castling(self):
+        if (self.previous_coord == None and current_board[self.hor][7].previous_coord == None and
+                all([type(current_board[self.hor][x]) == EmptyCell for x in range(5, 6)])):
+            return self.hor, 6
+
+    # функция должна учитывать шахи. для этого каждый ход проверяем на is checked
+    def possible_moves(self, hor, ver):
         selected_square = self.board[hor][ver]
         input_moves = selected_square.moves_empty_board()
         output_moves = []
@@ -66,7 +74,7 @@ class StaticBoard:
                     if target is EmptyCell:
                         output_moves.append((h, v))
                     else:
-                        if color != target.color:
+                        if self.turn != target.color:
                             output_moves.append((h, v))
                         break
         # pawn
@@ -82,46 +90,64 @@ class StaticBoard:
             # диагональные взятия
             for h, v in diag_direction:
                 target = self.board[h][v]
-                if isinstance(target, Piece) and color != target.color:
+                if isinstance(target, Piece) and self.turn != target.color:
                     output_moves.append((h, v))
             # взятие на проходе
             for h, v in diag_direction:
                 target = self.board[selected_square.hor][v]
-                if (target is Pawn and color != target.color and
+                if (target is Pawn and self.turn != target.color and
                         abs(selected_square.hor - target.previous_coord[0]) == 2 and
                         target == self.last_move):
                     output_moves.append((h, v))
         return output_moves
 
-    def is_check(self, color):
-        h, v = self.king_coord[color]
-        input_moves = Queen(h, v, color).moves_empty_board()
-        for direction in input_moves:
-            for hor, ver in direction:
-                target = self.board[hor][ver]
-                if isinstance(target, Piece) and color == target.color:
-                    break
-                elif isinstance(target, Piece) and color != target.color:
+    def is_any_moves(self):
+        for hor in range(8):
+            for ver in range(8):
+                square = self.board[hor][ver]
+                if isinstance(square, Piece) and square.color == self.turn and self.possible_moves(hor, ver):
                     return True
 
-    def is_checkmate(self, color):
+    def is_check(self):
+        hor, ver = self.king_coord[self.turn]
+        input_moves = Queen(hor, ver, self.turn).moves_empty_board()
+        for direction in input_moves:
+            for h, v in direction:
+                target = self.board[h][v]
+                if isinstance(target, Piece) and self.turn == target.color:
+                    break
+                elif isinstance(target, Piece) and self.turn != target.color:
+                    return True
+
+    # cценарии выхода из event loop
+    def is_checkmate(self):
+        return self.is_check() and not self.is_any_moves()
+
+    def is_stalemate(self):
+        return not self.is_any_moves()
+
+    def is_enough_pieces(self):
+        knight_scores = {'w': 0, 'b': 0}
+        bishop_scores = {'w': {'w': False, 'b': False}, 'b': {'w': False, 'b': False}}
+        for hor in range(8):
+            for ver in range(8):
+                square = self.board[hor][ver]
+                if isinstance(square, (Pawn, Queen, Rook)):
+                    return True
+                elif square is Knight:
+                    knight_scores[square.color] += 1
+                elif square is Bishop:
+                    bishop_scores[square.color][square.square] = True
+        total_white_scores = knight_scores['w'] + sum(bishop_scores['w'].values())
+        total_black_scores = knight_scores['b'] + sum(bishop_scores['b'].values())
+        return total_white_scores > 1 or total_black_scores > 1
+
+    def is_triple_repetition(self):
         pass
 
-    def is_stalemate(self, color):
-        pass
-
-    def is_long_castling(self):
-        if (self.previous_coord == None and current_board[self.hor][0].previous_coord == None and
-                all([type(current_board[self.hor][x]) == EmptyCell for x in range(1, 4)])):
-            return self.hor, 2
-
-    def is_short_castling(self):
-        if (self.previous_coord == None and current_board[self.hor][7].previous_coord == None and
-                all([type(current_board[self.hor][x]) == EmptyCell for x in range(5, 6)])):
-            return self.hor, 6
-
-    def fifty_moves_rule(self):
+    def is_fifty_moves_rule(self):
         if isinstance(self.last_move, Pawn):
             self.fifty_moves_counter = 0
         else:
             self.fifty_moves_counter += 1
+        return self.fifty_moves_counter > 50
