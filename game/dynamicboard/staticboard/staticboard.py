@@ -1,6 +1,10 @@
 from .pieces import *
 
 
+# задача класса:
+# 1) отрисовка стартовой доски с отображением самых важных ее характеристик (позиция, разноцветная разлиновка полей)
+# 2) сохранение качественных характеристик текущей позиции с помощью аттрибутов в контексте шахматных правил
+# 3) интерпретация текущей позиции с помощью тернарных функций в контексте шахматных правил
 class StaticBoard:
     _row1 = [
         Rook(0, 0, 'b'), Knight(0, 1, 'b'), Bishop(0, 2, 'b'), Queen(0, 3, 'b'),
@@ -19,13 +23,12 @@ class StaticBoard:
     _start_board = [_row1, _row2, _row3, _row4, _row5, _row6, _row7, _row8]
 
     def __init__(self):
-        self.board = self._start_board
-        self.turn = 'w'
-        self.last_move = None
-        self.fifty_moves_counter = 0
-        self.w_king_coord = 7, 4
-        self.b_king_coord = 0, 4
-        self.king_coord = {'w': self.w_king_coord, 'b': self.b_king_coord}
+        self.board = self._start_board  # текущая позиция на доске
+        self.turn = 'w'  # очередность хода
+        self.last_move = [None, False]  # последняя фигура, совершившая ход, а также факт взятия
+        self.king_coord = {'w': (7, 4), 'b': (0, 4)}  # текущая позиция королей
+        self.triple_repetition_counter = []
+        self.fifty_moves_counter = 0  # текущее количество ходов без взятия и хода пешкой
 
     def __str__(self):
         return '\n'.join(' '.join(str(c).center(4) for c in h) for h in self.board)
@@ -33,35 +36,48 @@ class StaticBoard:
     def __repr__(self):
         return '\n'.join(' '.join(repr(c).ljust(15) for c in h) for h in self.board)
 
-    def show_coord(self):
-        return '\n'.join(' '.join(c.coord for c in h) for h in self.board)
-
-    def show_square(self):
-        return '\n'.join(' '.join(c.square for c in h) for h in self.board)
-
+    # выбранная клетка - фигура или нет
     def is_piece(self, hor, ver):
-        if self.board[hor][ver] is not EmptyCell:
-            return True
-        else:
-            print('Вы выбрали пустую клетку. Попробуйте еще раз')
+        return isinstance(self.board[hor][ver], Piece)
 
+    # выбранная фигура - ее ход или нет
     def is_turn(self, hor, ver):
-        if self.board[hor][ver].color == self.turn:
-            return True
-        else:
-            print('Вы выбрали чужую фигуру. Попробуйте еще раз')
+        return self.board[hor][ver].color == self.turn
 
-    def is_long_castling(self):
-        if (self.previous_coord == None and current_board[self.hor][0].previous_coord == None and
-                all([type(current_board[self.hor][x]) == EmptyCell for x in range(1, 4)])):
-            return self.hor, 2
+    # выбранная клетка под боем или нет
+    def is_fire(self, hor, ver):
+        input_moves = Queen(hor, ver, self.turn).moves_empty_board()
+        for direction in input_moves:
+            for h, v in direction:
+                if self.is_piece(h, v):
+                    if self.is_turn(h, v):
+                        break
+                    else:
+                        if any([(hor, ver) in opposite for opposite in self.board[h][v].moves_empty_board()]):
+                            return True
 
+    # король под шахом или нет
+    def is_check(self):
+        h, v = self.king_coord[self.turn]
+        return self.is_fire(h, v)
+
+    # возможна ли короткая рокировка
     def is_short_castling(self):
-        if (self.previous_coord == None and current_board[self.hor][7].previous_coord == None and
-                all([type(current_board[self.hor][x]) == EmptyCell for x in range(5, 6)])):
-            return self.hor, 6
+        h, v = self.king_coord[self.turn]
+        if (not self.board[h][v].previous_coord and not self.board[h][7].previous_coord and
+                all([not self.is_piece(h, x) for x in range(5, 7)]) and
+                all([not self.is_fire(h, x) for x in range(4, 7)])):
+            return True
 
-    # функция должна учитывать шахи. для этого каждый ход проверяем на is checked
+    # возможна ли длинная рокировка
+    def is_long_castling(self):
+        h, v = self.king_coord[self.turn]
+        if (not self.board[h][v].previous_coord and not self.board[h][0].previous_coord and
+                all([not self.is_piece(h, x) for x in range(1, 4)]) and
+                all([not self.is_fire(h, x) for x in range(2, 5)])):
+            return True
+
+    # возможные ходы выбранной фигуры (доработка)
     def possible_moves(self, hor, ver):
         selected_square = self.board[hor][ver]
         input_moves = selected_square.moves_empty_board()
@@ -97,57 +113,59 @@ class StaticBoard:
                 target = self.board[selected_square.hor][v]
                 if (target is Pawn and self.turn != target.color and
                         abs(selected_square.hor - target.previous_coord[0]) == 2 and
-                        target == self.last_move):
+                        target == self.last_move[0]):
                     output_moves.append((h, v))
         return output_moves
 
-    def is_any_moves(self):
-        for hor in range(8):
-            for ver in range(8):
-                square = self.board[hor][ver]
-                if isinstance(square, Piece) and square.color == self.turn and self.possible_moves(hor, ver):
-                    return True
+    def all_possible_moves(self):
+        output_moves = []
+        for h in range(8):
+            for v in range(8):
+                if self.is_piece(h, v):
+                    output_moves.append(self.possible_moves(h, v))
+        return output_moves
 
-    def is_check(self):
-        hor, ver = self.king_coord[self.turn]
-        input_moves = Queen(hor, ver, self.turn).moves_empty_board()
-        for direction in input_moves:
-            for h, v in direction:
-                target = self.board[h][v]
-                if isinstance(target, Piece) and self.turn == target.color:
-                    break
-                elif isinstance(target, Piece) and self.turn != target.color:
-                    return True
+    # вспомогательные функции для определения возможности выхода из event loop
+    # 1) возникла ли позиция невозможности любого хода (пат/мат)
+    def is_no_moves(self):
+        for h in range(8):
+            for v in range(8):
+                if self.is_piece(h, v) and self.is_turn(h, v) and self.possible_moves(h, v):
+                    return
+        return True
 
-    # cценарии выхода из event loop
+    # 2) находится ли король под шахом при одновременной невозможности любого хода (мат)
     def is_checkmate(self):
-        return self.is_check() and not self.is_any_moves()
+        return self.is_check() and self.is_no_moves()
 
-    def is_stalemate(self):
-        return not self.is_any_moves()
-
-    def is_enough_pieces(self):
+    # 3) возникла ли позиция невозможности мата по причине недостатка фигур
+    def is_no_pieces(self):
         knight_scores = {'w': 0, 'b': 0}
         bishop_scores = {'w': {'w': False, 'b': False}, 'b': {'w': False, 'b': False}}
-        for hor in range(8):
-            for ver in range(8):
-                square = self.board[hor][ver]
+        for h in range(8):
+            for v in range(8):
+                square = self.board[h][v]
                 if isinstance(square, (Pawn, Queen, Rook)):
-                    return True
+                    return
                 elif square is Knight:
                     knight_scores[square.color] += 1
                 elif square is Bishop:
                     bishop_scores[square.color][square.square] = True
         total_white_scores = knight_scores['w'] + sum(bishop_scores['w'].values())
         total_black_scores = knight_scores['b'] + sum(bishop_scores['b'].values())
-        return total_white_scores > 1 or total_black_scores > 1
+        return total_white_scores < 2 and total_black_scores < 2
 
+    # 4) повторилась ли позиция 3 раза при одной и той же очередности хода и одинаковых возможных ходов (доработать)
     def is_triple_repetition(self):
-        pass
+        all_moves = self.all_possible_moves()
+        position = self.board[:]
+        self.triple_repetition_counter.append((all_moves, position, self.turn))
+        return self.triple_repetition_counter.count((all_moves, position, self.turn)) == 3
 
-    def is_fifty_moves_rule(self):
-        if isinstance(self.last_move, Pawn):
+    # 5) счетчик ходов без взятия и без хода пешкой
+    def is_fifty_moves(self):
+        if self.last_move[0] is Pawn or self.last_move[1]:
             self.fifty_moves_counter = 0
         else:
             self.fifty_moves_counter += 1
-        return self.fifty_moves_counter > 50
+        return self.fifty_moves_counter == 50

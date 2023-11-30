@@ -24,17 +24,17 @@ class Game(DynamicBoard):
 
             # 2 сценарии выхода из event loop
             # 2.1 сценарий мата
-            if self.is_checkmate(self):
+            if self.is_checkmate():
                 self.status = self._interface[f'{self.turn}l']
                 return
 
             # 2.2 сценарий пата
-            if self.is_stalemate(self):
+            if self.is_no_moves():
                 self.status = self._interface['ds']
                 return
 
             # 2.3 сценарий недостатка фигур для мата
-            if not self.is_enough_pieces():
+            if self.is_no_pieces():
                 self.status = self._interface['dp']
                 return
 
@@ -44,7 +44,7 @@ class Game(DynamicBoard):
                 return
 
             # 2.5 сценарий реализации правила 50 ходов
-            if self.is_fifty_moves_rule():
+            if self.is_fifty_moves():
                 self.status = self._interface['df']
                 return
 

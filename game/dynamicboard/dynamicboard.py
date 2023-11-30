@@ -8,11 +8,11 @@ class DynamicBoard(StaticBoard):
         selected_cell = self.board[h1][v1]
         # обычный ход
         if (h2, v2) in self.possible_moves(h1, h2, turn):
+            self.last_move = [self.board[h1][v1], self.is_piece(h2, v2)]  # записываем ходившую фигуру и факт взятия
             self.board[h2][v2] = self.board[h1][v1]  # передвигаем фигуру
             self.board[h1][v1] = EmptyCell(h1, v1)  # освобождаем предыдущую клетку
             self.board[h2][v2].previous_coord = h1, v1  # записываем предыдущие координаты фигуры
             self.board[h2][v2].after_move(h2, v2)  # записываем новые координаты фигуры
-            self.last_move = self.board[h2][v2]  # записываем фигуру, ходившую последней
         # рокировка в короткую сторону
         elif isinstance(selected_cell, King) and (h2, v2) == self.is_short_castling():
             h = h2
@@ -24,7 +24,7 @@ class DynamicBoard(StaticBoard):
             self.board[h][6].after_move(h, 6)  # записываем новые координаты короля
             self.board[h][4] = EmptyCell(h, 4)  # освобождаем предыдущую клетку
             self.board[h][7] = EmptyCell(h, 7)  # освобождаем предыдущую клетку
-            self.last_move = self.board[h][6]  # записываем фигуру, ходившую последней
+            self.last_move[0] = self.board[h][6]  # записываем фигуру, ходившую последней
         # рокировка в длинную сторону
         elif isinstance(selected_cell, King) and (h2, v2) == self.is_long_castling():
             h = h2
@@ -37,7 +37,7 @@ class DynamicBoard(StaticBoard):
             self.board[h][0] = EmptyCell(h, 0)  # освобождаем предыдущую клетку
             self.board[h][1] = EmptyCell(h, 1)  # освобождаем предыдущую клетку
             self.board[h][4] = EmptyCell(h, 4)  # освобождаем предыдущую клетку
-            self.last_move = self.board[h][2]  # записываем фигуру, ходившую последней
+            self.last_move[0] = self.board[h][2]  # записываем фигуру, ходившую последней
         else:
             print('Такого хода нет. Попробуйте еще раз')
             return True
