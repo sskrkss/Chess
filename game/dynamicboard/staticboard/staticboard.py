@@ -1,4 +1,5 @@
 from .pieces import *
+import copy
 
 
 # задача класса:
@@ -62,22 +63,28 @@ class StaticBoard:
         return self.is_fire(h, v)
 
     # возможна ли короткая рокировка
-    def is_short_castling(self):
-        h, v = self.king_coord[self.turn]
+    def is_short_castling(self, turn=''):
+        if turn:
+            h, v = self.king_coord[turn]
+        else:
+            h, v = self.king_coord[self.turn]
         if (not self.board[h][v].previous_coord and not self.board[h][7].previous_coord and
                 all([not self.is_piece(h, x) for x in range(5, 7)]) and
                 all([not self.is_fire(h, x) for x in range(4, 7)])):
-            return True
+            return h, 6
 
     # возможна ли длинная рокировка
-    def is_long_castling(self):
-        h, v = self.king_coord[self.turn]
+    def is_long_castling(self, turn=''):
+        if turn:
+            h, v = self.king_coord[turn]
+        else:
+            h, v = self.king_coord[self.turn]
         if (not self.board[h][v].previous_coord and not self.board[h][0].previous_coord and
                 all([not self.is_piece(h, x) for x in range(1, 4)]) and
                 all([not self.is_fire(h, x) for x in range(2, 5)])):
-            return True
+            return h, 2
 
-    # возможные ходы выбранной фигуры (доработка)
+    # возможные ходы выбранной фигуры без учета блокировки от шаха
     def possible_moves(self, hor, ver):
         selected_square = self.board[hor][ver]
         input_moves = selected_square.moves_empty_board()
@@ -87,19 +94,19 @@ class StaticBoard:
             for direction in input_moves:
                 for h, v in direction:
                     target = self.board[h][v]
-                    if target is EmptyCell:
+                    if target.__class__ is EmptyCell:
                         output_moves.append((h, v))
                     else:
-                        if self.turn != target.color:
+                        if selected_square.color != target.color:
                             output_moves.append((h, v))
                         break
         # pawn
-        elif selected_square is Pawn:
+        elif selected_square.__class__ is Pawn:
             updown_direction, diag_direction = input_moves
             # вертикальные ходы
             for h, v in updown_direction:
                 target = self.board[h][v]
-                if target is EmptyCell:
+                if target.__class__ is EmptyCell:
                     output_moves.append((h, v))
                 else:
                     break
@@ -111,18 +118,36 @@ class StaticBoard:
             # взятие на проходе
             for h, v in diag_direction:
                 target = self.board[selected_square.hor][v]
-                if (target is Pawn and self.turn != target.color and
+                if (target.__class__ is Pawn and self.turn != target.color and
                         abs(selected_square.hor - target.previous_coord[0]) == 2 and
                         target == self.last_move[0]):
                     output_moves.append((h, v))
         return output_moves
 
-    def all_possible_moves(self):
+    # финальные ходы выбранной фигуры с учетом блокировки от шаха
+    def final_moves(self, hor, ver):
+        output_moves = []
+        for h2, v2 in self.possible_moves(hor, ver):
+            backup = copy.deepcopy(self.board)
+            self.board[h2][v2] = self.board[hor][ver]  # передвигаем фигуру
+            self.board[hor][ver] = EmptyCell(hor, ver)  # освобождаем предыдущую клетку
+            self.board[h2][v2].after_move(h2, v2)  # записываем новые координаты фигуры
+            if self.board[h2][v2].__class__ is King:
+                self.king_coord[self.board[h2][v2].color] = h2, v2  # записываем новые координаты короля для доски
+            if not self.is_check():
+                output_moves.append((h2, v2))
+            if self.board[h2][v2].__class__ is King:
+                self.king_coord[self.board[h2][v2].color] = hor, ver  # записываем новые координаты короля для доски
+            self.board[h2][v2].after_move(hor, ver)  # записываем старые координаты фигуры
+            self.board = backup  # возвращаем старую доску
+        return output_moves
+
+    def all_final_moves(self):
         output_moves = []
         for h in range(8):
             for v in range(8):
                 if self.is_piece(h, v):
-                    output_moves.append(self.possible_moves(h, v))
+                    output_moves.append(self.final_moves(h, v))
         return output_moves
 
     # вспомогательные функции для определения возможности выхода из event loop
@@ -130,7 +155,7 @@ class StaticBoard:
     def is_no_moves(self):
         for h in range(8):
             for v in range(8):
-                if self.is_piece(h, v) and self.is_turn(h, v) and self.possible_moves(h, v):
+                if self.is_piece(h, v) and self.is_turn(h, v) and self.final_moves(h, v):
                     return
         return True
 
@@ -147,9 +172,9 @@ class StaticBoard:
                 square = self.board[h][v]
                 if isinstance(square, (Pawn, Queen, Rook)):
                     return
-                elif square is Knight:
+                elif square.__class__ is Knight:
                     knight_scores[square.color] += 1
-                elif square is Bishop:
+                elif square.__class__ is Bishop:
                     bishop_scores[square.color][square.square] = True
         total_white_scores = knight_scores['w'] + sum(bishop_scores['w'].values())
         total_black_scores = knight_scores['b'] + sum(bishop_scores['b'].values())
@@ -157,14 +182,18 @@ class StaticBoard:
 
     # 4) повторилась ли позиция 3 раза при одной и той же очередности хода и одинаковых возможных ходов (доработать)
     def is_triple_repetition(self):
-        all_moves = self.all_possible_moves()
-        position = self.board[:]
+        all_moves = self.all_final_moves()
+        all_moves.append(
+            [self.is_short_castling('w'), self.is_long_castling('w'),
+             self.is_short_castling('b'), self.is_long_castling('b')]
+        )
+        position = [[p.__str__() for p in row] for row in self.board]
         self.triple_repetition_counter.append((all_moves, position, self.turn))
         return self.triple_repetition_counter.count((all_moves, position, self.turn)) == 3
 
     # 5) счетчик ходов без взятия и без хода пешкой
     def is_fifty_moves(self):
-        if self.last_move[0] is Pawn or self.last_move[1]:
+        if self.last_move[0].__class__ is Pawn or self.last_move[1]:
             self.fifty_moves_counter = 0
         else:
             self.fifty_moves_counter += 1

@@ -19,7 +19,7 @@ class Pawn(Piece):
 
             #  диагональные взятия
             if self.ver == 0 or self.ver == 7: # крайние пешки
-                diag_direction = [(self.hor - 1, self.ver - 1), (self.hor - 1, self.ver + 1)][self.ver == 0]
+                diag_direction = [((self.hor - 1, self.ver - 1), (self.hor - 1, self.ver + 1))[self.ver == 0]]
             else:  # срединные пешки:
                 diag_direction = [(self.hor - 1, self.ver - 1), (self.hor - 1, self.ver + 1)]
 

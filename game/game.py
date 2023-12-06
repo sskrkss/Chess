@@ -53,11 +53,15 @@ class Game(DynamicBoard):
             while True:
                 print('Введите координаты выбранной фигуры')
                 h1, v1 = self.coord_converter(input().lower())
-                if not self.is_piece(h1, v1) or not self.is_turn(h1, v1):
+                if not self.is_piece(h1, v1):
+                    print('Вы выбрали пустую клетку. Попробуйте еще раз')
+                    continue
+                elif not self.is_turn(h1, v1):
+                    print('Вы выбрали чужую фигуру. Попробуйте еще раз')
                     continue
                 print('Введите координаты хода')
                 h2, v2 = self.coord_converter(input().lower())
-                if self.move(h1, v1, h2, v2, self.turn):
+                if self.move(h1, v1, h2, v2):
                     break
 
             # 4 меняем ход
